@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+#    show_sql: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3307/toadzbot?createDatabaseIfNotExist=true
+    username: root
+    password: password
+
+tokens:
+  file: ${TOKEN_LOCATION:tokens.properties}
+web3j:
+  client-address: https://arb1.arbitrum.io/rpc
