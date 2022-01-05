@@ -82,7 +82,7 @@ public class DiscordBot implements ApplicationRunner {
           .on(RefreshEvent.class)
           .subscribe(
               event -> {
-                String posNeg = currentChange >= 0.0 ? "\uD83C\uDF4C" : "\uD83C\uDF46";
+                String posNeg = String.valueOf(currentChange);
                 String nickName = ("MAGIC $" + currentPrice + " " + posNeg);
                 String presence = String.format("24h: %.2f%%", currentChange);
                 client.getGuilds().toStream().forEach(g -> g.changeSelfNickname(nickName).block());

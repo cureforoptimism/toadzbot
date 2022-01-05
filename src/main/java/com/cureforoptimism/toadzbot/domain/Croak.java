@@ -19,5 +19,7 @@ public class Croak {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   Long id;
 
+  Long discordUserId;
+
   String discordId;
 }

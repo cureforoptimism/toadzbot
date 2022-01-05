@@ -4,14 +4,22 @@ import com.cureforoptimism.toadzbot.domain.Croak;
 import com.cureforoptimism.toadzbot.repository.CroakRepository;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
-import lombok.AllArgsConstructor;
+import java.text.NumberFormat;
+import java.util.Random;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-@AllArgsConstructor
 public class CroakCommand implements ToadzCommand {
   private final CroakRepository croakRepository;
+  private final Set<String> suffixes;
+
+  public CroakCommand(CroakRepository croakRepository) {
+    this.croakRepository = croakRepository;
+
+    this.suffixes = Set.of("Toadally awesome!", "Keep croakin'", "Run it up the tadpole!");
+  }
 
   @Override
   public String getName() {
@@ -30,7 +38,17 @@ public class CroakCommand implements ToadzCommand {
 
   @Override
   public Mono<Message> handle(MessageCreateEvent event) {
-    croakRepository.save(Croak.builder().discordId(event.getMessage().getUserData().username() + "#" + event.getMessage().getUserData().discriminator()).build());
+    croakRepository.save(
+        Croak.builder()
+            .discordUserId(event.getMessage().getUserData().id().asLong())
+            .discordId(
+                event.getMessage().getUserData().username()
+                    + "#"
+                    + event.getMessage().getUserData().discriminator())
+            .build());
+
+    String suffix =
+        suffixes.stream().skip(new Random().nextInt(suffixes.size())).findFirst().orElse("");
 
     return event
         .getMessage()
@@ -38,8 +56,10 @@ public class CroakCommand implements ToadzCommand {
         .flatMap(
             c ->
                 c.createMessage(
-                    "<:toad:913690221088997376> croak count: "
-                        + croakRepository.findFirstByOrderByIdDesc().getId()
-                        + "! Keep croakinggg"));
+                    "<:toad:913690221088997376> **"
+                        + NumberFormat.getIntegerInstance()
+                            .format(croakRepository.findFirstByOrderByIdDesc().getId())
+                        + " Croaks**, and counting! "
+                        + suffix));
   }
 }
