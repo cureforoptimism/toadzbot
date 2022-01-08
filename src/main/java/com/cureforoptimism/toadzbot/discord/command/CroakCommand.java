@@ -5,6 +5,7 @@ import com.cureforoptimism.toadzbot.repository.CroakRepository;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import java.text.NumberFormat;
+import java.util.Date;
 import java.util.Random;
 import java.util.Set;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,21 @@ public class CroakCommand implements ToadzCommand {
 
   @Override
   public Mono<Message> handle(MessageCreateEvent event) {
+    final var previousCroak =
+        croakRepository.findFirstByDiscordUserIdOrderByCreatedAtDesc(
+            event.getMessage().getUserData().id().asLong());
+    if (previousCroak.isPresent()) {
+      Date previousCroakDate = previousCroak.get().getCreatedAt();
+
+      if (previousCroakDate != null
+          && previousCroak
+              .get()
+              .getCreatedAt()
+              .after(new Date(System.currentTimeMillis() - 30000L))) {
+        return Mono.empty();
+      }
+    }
+
     croakRepository.save(
         Croak.builder()
             .discordUserId(event.getMessage().getUserData().id().asLong())
@@ -45,6 +61,7 @@ public class CroakCommand implements ToadzCommand {
                 event.getMessage().getUserData().username()
                     + "#"
                     + event.getMessage().getUserData().discriminator())
+            .createdAt(new Date())
             .build());
 
     String suffix =
