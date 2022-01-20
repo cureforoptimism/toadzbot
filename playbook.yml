@@ -7,31 +7,24 @@
         apiVersion: apps/v1
         kind: StatefulSet
         metadata:
-          name: mbot
+          name: toadzbot
         spec:
-          serviceName: mbot
+          serviceName: toadzbot
           template:
             metadata:
               labels:
-                app: mbot
+                app: toadzbot
             spec:
               containers:
               - image: "{{ image }}"
-                name: mbot
+                name: toadzbot
                 env:
                 - name: MYSQL_HOST
                   value: mysql
                 - name: MYSQL_PORT
                   value: "3306"
-                volumeMounts:
-                - name: mbot-persistent-storage
-                  mountPath: /mbot/img_cache
-              volumes:
-              - name: mbot-persistent-storage
-                persistentVolumeClaim:
-                  claimName: mbot-pv-claim
           selector:
             matchLabels:
-              app: mbot
+              app: toadzbot
       validate_certs: no
       namespace: discordbots
