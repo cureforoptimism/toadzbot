@@ -6,7 +6,7 @@ pipeline {
    stages {
        stage('Build Dockerfile and Publish') {
            environment {
-               TOKENS = credentials('tokens.properties')
+               TOKENS = credentials('	toadz_tokens.properties')
            }
            steps{
                script {
