@@ -9,6 +9,8 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3307}/toadzbot?createDatabaseIfNotExist=true
     username: root
     password: password
+    hikari:
+      max-lifetime: 600000
 
 tokens:
   file: ${TOKEN_LOCATION:tokens.properties}
