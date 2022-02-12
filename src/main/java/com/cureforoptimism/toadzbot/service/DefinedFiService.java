@@ -23,6 +23,9 @@ public class DefinedFiService implements MagicValueService {
   @Override
   @Scheduled(fixedDelay = 30000, initialDelay = 5000L)
   public void refreshMagicPrice() {
+    if(!enabled) {
+      return;
+    }
     final var client = HttpClient.newHttpClient();
     final HttpRequest req;
     try {
