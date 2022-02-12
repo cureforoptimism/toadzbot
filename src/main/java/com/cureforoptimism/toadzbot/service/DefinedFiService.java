@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class DefinedFiService implements MagicValueService {
   private final DiscordBot discordClient;
-  private final boolean enabled = true;
+  private final boolean enabled = false;
 
   @Override
   @Scheduled(fixedDelay = 30000, initialDelay = 5000L)
