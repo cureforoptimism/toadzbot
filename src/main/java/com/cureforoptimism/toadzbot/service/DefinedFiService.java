@@ -37,10 +37,10 @@ public class DefinedFiService implements MagicValueService {
       req =
           HttpRequest.newBuilder(
                   new URI(
-                      "https://7ng6kythprhcjaby3nodr77leu.appsync-api.us-west-2.amazonaws.com/graphql"))
+                      "https://i3zwhsu375dqllo5srv5vn35ba.appsync-api.us-west-2.amazonaws.com/graphql"))
               .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
               .header("Content-Type", "application/json")
-              .header("x-api-key", "da2-4isjqg3vu5c5leyskyr2tw2tja")
+              .header("x-api-key", "da2-vkmqkh3wlngdfktfeybq6j44li")
               .build();
 
       final var response = client.send(req, HttpResponse.BodyHandlers.ofString());
