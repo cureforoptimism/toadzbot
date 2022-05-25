@@ -23,6 +23,13 @@
                   value: mysql
                 - name: MYSQL_PORT
                   value: "3306"
+                volumeMounts:
+                  - name: toadzbot-persistent-storage
+                    mountPath: /toadzbot/img_cache
+              volumes:
+                - name: toadzbot-persistent-storage
+                  persistentVolumeClaim:
+                    claimName: nfs-discordbot-pvc
           selector:
             matchLabels:
               app: toadzbot
