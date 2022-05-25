@@ -48,6 +48,7 @@ public class Utilities {
         "excludeSwitches", Collections.singletonList("enable-automation"));
     options.addArguments("window-size=600,600");
     options.addArguments("--headless");
+    options.addArguments("--no-sandbox");
     webDriver = new ChromeDriver(options);
   }
 
