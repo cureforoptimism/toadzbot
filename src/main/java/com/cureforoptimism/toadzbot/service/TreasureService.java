@@ -47,14 +47,15 @@ public class TreasureService {
         final var listing = listings.getJSONObject(x);
 
         String transactionId = listing.getString("transactionLink");
-        if (!toadzSaleRepository.existsById(transactionId)) {
-          int tokenId = listing.getJSONObject("token").getInt("tokenId");
+        int tokenId = listing.getJSONObject("token").getInt("tokenId");
+
+        if (!toadzSaleRepository.existsByTxAndTokenId(transactionId, tokenId)) {
           BigDecimal pricePerItem = new BigDecimal(listing.getBigInteger("pricePerItem"), 18, mc);
           Date blockTimeStamp = new Date(listing.getLong("blockTimestamp") * 1000);
 
           toadzSaleRepository.save(
               ToadzSale.builder()
-                  .id(transactionId)
+                  .tx(transactionId)
                   .tokenId(tokenId)
                   .salePrice(pricePerItem)
                   .blockTimestamp(blockTimeStamp)

@@ -19,7 +19,6 @@ public class CoinGeckoService implements MagicValueService {
     this.client = client;
   }
 
-  @Scheduled(fixedDelay = 30000)
   @Override
   @Scheduled(fixedDelay = 30000)
   public synchronized void refreshMagicPrice() {

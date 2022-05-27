@@ -5,8 +5,10 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ToadzSaleRepository extends JpaRepository<ToadzSale, String> {
+public interface ToadzSaleRepository extends JpaRepository<ToadzSale, Long> {
   ToadzSale findFirstByPostedIsTrueOrderByBlockTimestampDesc();
+
+  boolean existsByTxAndTokenId(String tx, Integer tokenId);
 
   List<ToadzSale> findByBlockTimestampIsAfterAndPostedIsFalseOrderByBlockTimestampAsc(
       Date blockTimestamp);
