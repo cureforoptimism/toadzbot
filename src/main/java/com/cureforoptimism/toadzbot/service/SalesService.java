@@ -44,10 +44,10 @@ public class SalesService {
     if (discordBot.getCurrentPrice() == null) {
       return;
     }
-    //     TODO: Perform this check, for sure, before posting tweets
-    //    if (System.getenv("PROD") == null) {
-    //      return;
-    //    }
+
+    if (System.getenv("PROD") == null) {
+      return;
+    }
 
     if (lastPostedBlockTimestamp == null) {
       ToadzSale lastPostedSale =
