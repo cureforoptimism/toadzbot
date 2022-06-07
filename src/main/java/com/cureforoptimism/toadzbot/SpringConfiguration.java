@@ -2,11 +2,15 @@ package com.cureforoptimism.toadzbot;
 
 import static com.cureforoptimism.toadzbot.Constants.TOADSTOOLZ_CONTRACT_ID;
 
+import com.cureforoptimism.toadzbot.service.TokenService;
 import com.litesoftwares.coingecko.CoinGeckoApiClient;
 import com.litesoftwares.coingecko.impl.CoinGeckoApiClientImpl;
+import io.github.redouane59.twitter.TwitterClient;
+import io.github.redouane59.twitter.signature.TwitterCredentials;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +29,10 @@ import org.web3j.tx.gas.DefaultGasProvider;
 @Configuration
 @EnableScheduling
 @EnableTransactionManagement
+@RequiredArgsConstructor
 public class SpringConfiguration {
+  final TokenService tokenService;
+
   @Bean
   public CoinGeckoApiClient coinGeckoApiClient() {
     return new CoinGeckoApiClientImpl();
@@ -68,5 +75,17 @@ public class SpringConfiguration {
     }
 
     return null;
+  }
+
+  @Bean
+  public TwitterClient twitterClient() {
+    return new TwitterClient(
+        TwitterCredentials.builder()
+            .accessToken(tokenService.getTwitterApiToken())
+            .accessTokenSecret(tokenService.getTwitterApiTokenSecret())
+            .bearerToken(tokenService.getTwitterApiBearerToken())
+            .apiKey(tokenService.getTwitterApiKey())
+            .apiSecretKey(tokenService.getTwitterApiSecret())
+            .build());
   }
 }

@@ -7,6 +7,10 @@ import com.cureforoptimism.toadzbot.domain.ToadzSale;
 import com.cureforoptimism.toadzbot.repository.ToadzSaleRepository;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageCreateSpec;
+import io.github.redouane59.twitter.TwitterClient;
+import io.github.redouane59.twitter.dto.tweet.MediaCategory;
+import io.github.redouane59.twitter.dto.tweet.TweetParameters;
+import io.github.redouane59.twitter.dto.tweet.TweetParameters.Media;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,12 +37,14 @@ public class SalesService {
   private final DiscordBot discordBot;
   private final Utilities utilities;
 
+  private final TwitterClient twitterClient;
+
   @Scheduled(fixedDelay = 30000, initialDelay = 10000)
   public synchronized void postNewSales() {
     if (discordBot.getCurrentPrice() == null) {
       return;
     }
-    // TODO: Perform this check, for sure, before posting tweets
+    //     TODO: Perform this check, for sure, before posting tweets
     //    if (System.getenv("PROD") == null) {
     //      return;
     //    }
@@ -106,34 +112,30 @@ public class SalesService {
 
         byte[] bytes = baos.toByteArray();
         // TODO: Uncomment if we add twitter
-        //        final var mediaResponse =
-        //            twitterClient.uploadMedia(
-        //                toadzSale.getTokenId() + "_smol.png", bytes, MediaCategory.TWEET_IMAGE);
-        //        final var media =
-        // Media.builder().mediaIds(List.of(mediaResponse.getMediaId())).build();
-        //        TweetParameters tweetParameters =
-        //            TweetParameters.builder()
-        //                .media(media)
-        //                .text(
-        //                    "The Lost Donkeys #"
-        //                        + tokenId
-        //                        + " (Rarity Rank #"
-        //                        + rarityRank.getRank()
-        //                        + ")\nSold for\nMAGIC: "
-        //                        + decimalFormatOptionalZeroes.format(toadzSale.getSalePrice())
-        //                        + "\nUSD: $"
-        //                        + usdValue
-        //                        + "\nETH: "
-        //                        + ethValue
-        //                        + "\n\n"
-        //                        +
-        // "https://marketplace.treasure.lol/collection/0x6325439389e0797ab35752b4f43a14c004f22a9c/"
-        //                        + toadzSale.getTokenId()
-        //                        + "\n\n"
-        //                        + "#smolbrains #treasuredao")
-        //                .build();
+        final var mediaResponse =
+            twitterClient.uploadMedia(
+                toadzSale.getTokenId() + "_toadstoolz.png", bytes, MediaCategory.TWEET_IMAGE);
+        final var media = Media.builder().mediaIds(List.of(mediaResponse.getMediaId())).build();
+        TweetParameters tweetParameters =
+            TweetParameters.builder()
+                .media(media)
+                .text(
+                    "Toadstoolz #"
+                        + tokenId
+                        + "\nSold for\nMAGIC: "
+                        + decimalFormatOptionalZeroes.format(toadzSale.getSalePrice())
+                        + "\nUSD: $"
+                        + usdValue
+                        + "\nETH: "
+                        + ethValue
+                        + "\n\n"
+                        + "https://marketplace.treasure.lol/collection/toadstoolz/"
+                        + toadzSale.getTokenId()
+                        + "\n\n"
+                        + "#toadstoolz #treasuredao")
+                .build();
+        twitterClient.postTweet(tweetParameters);
 
-        //        twitterClient.postTweet(tweetParameters);
         final MessageCreateSpec messageCreateSpec =
             MessageCreateSpec.builder()
                 .addFile("toadz_" + tokenId + ".png", new ByteArrayInputStream(bytes))
