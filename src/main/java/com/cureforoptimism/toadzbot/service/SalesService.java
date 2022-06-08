@@ -4,6 +4,7 @@ import com.cureforoptimism.toadzbot.Constants;
 import com.cureforoptimism.toadzbot.Utilities;
 import com.cureforoptimism.toadzbot.application.DiscordBot;
 import com.cureforoptimism.toadzbot.domain.ToadzSale;
+import com.cureforoptimism.toadzbot.repository.ToadzRarityRankRepository;
 import com.cureforoptimism.toadzbot.repository.ToadzSaleRepository;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageCreateSpec;
@@ -39,15 +40,17 @@ public class SalesService {
 
   private final TwitterClient twitterClient;
 
+  private final ToadzRarityRankRepository toadzRarityRankRepository;
+
   @Scheduled(fixedDelay = 30000, initialDelay = 10000)
   public synchronized void postNewSales() {
     if (discordBot.getCurrentPrice() == null) {
       return;
     }
 
-    if (System.getenv("PROD") == null) {
-      return;
-    }
+    //    if (System.getenv("PROD") == null) {
+    //      return;
+    //    }
 
     if (lastPostedBlockTimestamp == null) {
       ToadzSale lastPostedSale =
@@ -97,6 +100,8 @@ public class SalesService {
 
         final int tokenId = toadzSale.getTokenId();
 
+        final var rarityRank = toadzRarityRankRepository.findByToadId((long) tokenId).getRank();
+
         final var img = utilities.getToadzImage(Integer.toString(tokenId));
         if (img == null) {
           continue;
@@ -122,7 +127,9 @@ public class SalesService {
                 .text(
                     "Toadstoolz #"
                         + tokenId
-                        + "\nSold for\nMAGIC: "
+                        + " (Rarity Rank #"
+                        + rarityRank
+                        + ")\nSold for\nMAGIC: "
                         + decimalFormatOptionalZeroes.format(toadzSale.getSalePrice())
                         + "\nUSD: $"
                         + usdValue
@@ -141,7 +148,12 @@ public class SalesService {
                 .addFile("toadz_" + tokenId + ".png", new ByteArrayInputStream(bytes))
                 .addEmbed(
                     EmbedCreateSpec.builder()
-                        .description("**SOLD**\nToadstoolz #" + tokenId)
+                        .description(
+                            "**SOLD**\nToadstoolz #"
+                                + tokenId
+                                + " (Rarity Rank: **#"
+                                + rarityRank
+                                + "**)")
                         .addField(
                             "MAGIC",
                             decimalFormatOptionalZeroes.format(toadzSale.getSalePrice()),

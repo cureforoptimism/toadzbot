@@ -53,6 +53,7 @@ dependencies {
     implementation 'org.seleniumhq.selenium:selenium-java:4.1.4'
     implementation 'ru.yandex.qatools.ashot:ashot:1.5.4'
     implementation 'io.github.redouane59.twitter:twittered:2.16'
+    implementation 'org.apache.commons:commons-csv:1.9.0'
     runtimeOnly 'mysql:mysql-connector-java:8.0.25'
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'

@@ -1,12 +1,16 @@
 package com.cureforoptimism.toadzbot;
 
+import com.cureforoptimism.toadzbot.domain.RarityRank;
 import com.cureforoptimism.toadzbot.domain.Toad;
 import com.cureforoptimism.toadzbot.domain.Trait;
 import com.cureforoptimism.toadzbot.repository.ToadRepository;
+import com.cureforoptimism.toadzbot.repository.ToadzRarityRankRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,11 +21,14 @@ import java.util.Collections;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.web3j.contracts.eip721.generated.ERC721Metadata;
 import org.web3j.tx.exceptions.ContractCallException;
@@ -37,11 +44,16 @@ public class Utilities {
 
   @Autowired private final ToadRepository toadRepository;
 
+  @Autowired private final ToadzRarityRankRepository toadzRarityRankRepository;
   private final WebDriver webDriver;
 
-  public Utilities(ERC721Metadata erc721Metadata, ToadRepository toadRepository) {
+  public Utilities(
+      ERC721Metadata erc721Metadata,
+      ToadRepository toadRepository,
+      ToadzRarityRankRepository toadzRarityRankRepository) {
     this.erc721Metadata = erc721Metadata;
     this.toadRepository = toadRepository;
+    this.toadzRarityRankRepository = toadzRarityRankRepository;
 
     ChromeOptions options = new ChromeOptions();
     options.setExperimentalOption(
@@ -50,6 +62,41 @@ public class Utilities {
     options.addArguments("--headless");
     options.addArguments("--no-sandbox");
     webDriver = new ChromeDriver(options);
+  }
+
+  void generateRanks() {
+    InputStream csv;
+    CSVParser parser;
+
+    try {
+      csv = new ClassPathResource("collection_toadstoolz.csv").getInputStream();
+    } catch (IOException ex) {
+      log.error("Unable to read CSV", ex);
+      return;
+    }
+
+    try {
+      parser = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(new InputStreamReader(csv));
+    } catch (IOException ex) {
+      log.error("Unable to parse CSV", ex);
+      return;
+    }
+
+    parser.stream()
+        .forEach(
+            r -> {
+              final var rank = r.get("nft_rank");
+              final var id = r.get("id");
+              final var score = r.get("rarity score new");
+
+              toadzRarityRankRepository.save(
+                  RarityRank.builder()
+                      .toadId(Long.parseLong(id))
+                      .rank(Integer.parseInt(rank))
+                      .score(Double.parseDouble(score.replace(",", "")))
+                      .build());
+            });
+    log.info("rarities generated and saved");
   }
 
   public Optional<Toad> getToad(String id) {
@@ -119,8 +166,7 @@ public class Utilities {
       // Read
       try {
         ByteArrayInputStream bytes = new ByteArrayInputStream(Files.readAllBytes(path));
-        BufferedImage img = ImageIO.read(bytes);
-        return img;
+        return ImageIO.read(bytes);
       } catch (IOException e) {
         e.printStackTrace();
         return null;
