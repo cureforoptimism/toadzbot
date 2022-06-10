@@ -15,8 +15,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -30,8 +30,8 @@ import org.springframework.stereotype.Service;
 public class TreasureService {
   private final ToadzSaleRepository toadzSaleRepository;
 
-
-  private final Map<String, TreeMap<Integer, String>> adventureToRecipes = new HashMap<>();
+  @Getter
+  private String supplyMessage;
 
   @Scheduled(fixedDelay = 60000)
   public synchronized void updateSupplies() {
@@ -42,57 +42,24 @@ public class TreasureService {
     // This will start with zeroed out entries. We'll populate them in the 2nd query.
     Map<String, Integer> tools = new HashMap<>();
     Map<String, Integer> resources = new HashMap<>();
+    long totalResources = 0;
 
     try {
 
       HttpClient httpClient = HttpClient.newHttpClient();
 
+      // Next, get each item and its supply
+      jsonBody =
+          "{\"query\":\"{\\nitems(first:1000) {\\n    id\\n    name\\n    totalSupply\\n  category\\n}  \\n}\",\"variables\":null}";
       HttpRequest request =
           HttpRequest.newBuilder(
                   new URI("https://api.thegraph.com/subgraphs/name/vinnytreasure/toadstoolzsubgraph-prod"))
               .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
               .header("Content-Type", "application/json")
               .build();
-
       HttpResponse<String> response =
           httpClient.send(request, HttpResponse.BodyHandlers.ofString());
       JSONObject obj = new JSONObject(response.body()).getJSONObject("data");
-      JSONArray locationRecipes = obj.getJSONArray("craftingRecipeOutputs");
-      for(int x = 0; x < locationRecipes.length(); x++) {
-        JSONObject locationRecipe = locationRecipes.getJSONObject(x);
-        JSONObject recipe = locationRecipe.getJSONObject("recipe");
-        String name = recipe.getString("name");
-
-        if(!adventureToRecipes.containsKey(name)) {
-          adventureToRecipes.put(name, new TreeMap<>());
-        }
-
-        final var mapEntry = adventureToRecipes.get(name);
-
-        JSONArray options = locationRecipe.getJSONArray("options");
-        for(int y = 0; y < options.length(); y++) {
-          JSONObject option = options.getJSONObject(y);
-          int baseOdds = option.getJSONObject("odds").getInt("baseOdds");
-          String itemName = option.getJSONObject("item").getString("name");
-
-          mapEntry.put(baseOdds, itemName);
-        }
-
-        adventureToRecipes.put(name, mapEntry);
-      }
-
-      // Next, get each item and its supply
-      jsonBody =
-          "{\"query\":\"{\\nitems(first:1000) {\\n    id\\n    name\\n    totalSupply\\n  category\\n}  \\n}\",\"variables\":null}";
-      request =
-          HttpRequest.newBuilder(
-                  new URI("https://api.thegraph.com/subgraphs/name/vinnytreasure/toadstoolzsubgraph-prod"))
-              .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-              .header("Content-Type", "application/json")
-              .build();
-      response =
-          httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-      obj = new JSONObject(response.body()).getJSONObject("data");
       JSONArray items = obj.getJSONArray("items");
       for(int x = 0; x < items.length(); x++) {
         JSONObject item = items.getJSONObject(x);
@@ -101,7 +68,12 @@ public class TreasureService {
         if(category.equalsIgnoreCase("tool")) {
           tools.put(item.getString("name"), item.getInt("totalSupply"));
         } else if(category.equalsIgnoreCase("resource")) {
-          resources.put(item.getString("name"), item.getInt("totalSupply"));
+          String name = item.getString("name");
+
+          if(!name.equalsIgnoreCase("gold wood")) {
+            resources.put(name, item.getInt("totalSupply"));
+            totalResources += item.getLong("totalSupply");
+          }
         }
       }
 
@@ -130,15 +102,45 @@ public class TreasureService {
         int currentGlobal = location.getInt("currentCraftsGlobally");
         float percentUsed = currentGlobal == 0 ? 0.0f : ((float)currentGlobal / (float)maxGlobal) * 100.0f;
 
-        final var rareResource = adventureToRecipes.get("Adventure: " + displayName).firstEntry().getValue();
-        final var totalResources = resources.get(rareResource);
-        float percentRareProduced = currentGlobal == 0 ? 0.0f : ((float)totalResources / (float)currentGlobal) * 100.0f;
+        sb.append(displayName).append(" - ").append(currentGlobal).append(" / ").append(maxGlobal).append(" (").append(String.format("%.2f", percentUsed)).append("% quests completed)\n");
+      }
 
-        sb.append("**").append(displayName).append("**\n")
-            .append("Rare resource: ").append(rareResource).append(" - ").append(resources.get(rareResource)).append(" / ").append(currentGlobal).append(" crafted (").append(String.format("%.00f", percentRareProduced)).append("% rare produced)\n")
-            .append("Adventures quested: ").append(currentGlobal).append(" / ")
-            .append(maxGlobal)
-            .append(" (").append(String.format("%.00f", percentUsed)).append("%)")
+      // Add shop listings to held count for tools
+      jsonBody = "{\"query\":\"\\n    query itemShopListings {\\n  itemShopListings {\\n    id\\n    status\\n    listingStart\\n    listingEnd\\n    totalQuantityAvailable\\n    quantityPurchased\\n    bugzCost\\n    item {\\n      id\\n      name\\n      description\\n      category\\n      readURI\\n    }\\n  }\\n}\\n    \"}";
+      request =
+          HttpRequest.newBuilder(
+                  new URI("https://api.thegraph.com/subgraphs/name/vinnytreasure/toadstoolzsubgraph-prod"))
+              .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+              .header("Content-Type", "application/json")
+              .build();
+      response =
+          httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+      obj = new JSONObject(response.body()).getJSONObject("data");
+      JSONArray itemShopListings = obj.getJSONArray("itemShopListings");
+
+      for(int x = 0; x < itemShopListings.length(); x++) {
+        JSONObject listing = itemShopListings.getJSONObject(x);
+        JSONObject tool = listing.getJSONObject("item");
+        String name = tool.getString("name");
+
+        if(tools.containsKey(name)) {
+          int totalQuantityAvailable = listing.getInt("totalQuantityAvailable");
+          int quantityPurchased = listing.getInt("quantityPurchased");
+          tools.put(name, tools.get(name) + totalQuantityAvailable - quantityPurchased);
+        }
+      }
+
+      // Resource counts
+      sb.append("\n").append("**Resources**").append("\n");
+      Map<String, Integer> sortedResources = resources.entrySet().stream().sorted(Map.Entry.comparingByValue()).collect(
+          Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (oldV, newV) -> oldV, LinkedHashMap::new));
+      for(final var entry : sortedResources.entrySet()) {
+        float percentOfRare = entry.getValue() == 0 ? 0.0f : ((float)entry.getValue() / (float)totalResources) * 100.0f;
+
+        sb.append(entry.getKey()).append(" - ")
+            .append(entry.getValue())
+            .append(" (")
+            .append(String.format("%.2f", percentOfRare)).append("%)")
             .append("\n");
       }
 
@@ -151,7 +153,7 @@ public class TreasureService {
         sb.append(entry.getKey()).append(" - ").append(entry.getValue()).append("\n");
       }
 
-      log.info(sb.toString());
+      supplyMessage = sb.toString();
     } catch (URISyntaxException | IOException | InterruptedException ex) {
       log.error("error updating supplies: " + ex);
     }
