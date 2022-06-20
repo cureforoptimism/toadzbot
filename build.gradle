@@ -30,14 +30,9 @@ configurations {
 repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-
-    flatDir {
-        dirs 'libs'
-    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', includes: ['*.jar'])
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
@@ -54,6 +49,8 @@ dependencies {
     implementation 'ru.yandex.qatools.ashot:ashot:1.5.4'
     implementation 'io.github.redouane59.twitter:twittered:2.16'
     implementation 'org.apache.commons:commons-csv:1.9.0'
+    implementation 'org.springframework.data:spring-data-redis:2.7.0'
+    implementation 'redis.clients:jedis:3.8.0'
     runtimeOnly 'mysql:mysql-connector-java:8.0.25'
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'

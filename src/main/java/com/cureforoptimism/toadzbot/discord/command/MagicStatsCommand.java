@@ -1,8 +1,8 @@
 package com.cureforoptimism.toadzbot.discord.command;
 
 import com.cureforoptimism.toadzbot.application.DiscordBot;
-import com.cureforoptimism.toadzbot.service.CoinGeckoService;
-import com.litesoftwares.coingecko.domain.Coins.CoinFullData;
+import com.cureforoptimism.toadzbot.domain.MarketPrice;
+import com.cureforoptimism.toadzbot.service.MarketPriceMessageSubscriber;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.spec.EmbedCreateFields.Footer;
@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class MagicStatsCommand implements ToadzCommand {
   private final DiscordBot discordBot;
-  private final CoinGeckoService coinGeckoService;
+  private final MarketPriceMessageSubscriber marketPriceMessageSubscriber;
 
   @Override
   public String getName() {
@@ -36,7 +36,7 @@ public class MagicStatsCommand implements ToadzCommand {
 
   @Override
   public Mono<Message> handle(MessageCreateEvent event) {
-    CoinFullData coinData = coinGeckoService.getCoinFullData();
+    MarketPrice marketPrice = marketPriceMessageSubscriber.getLastMarketPlace();
 
     return event
         .getMessage()
@@ -48,11 +48,11 @@ public class MagicStatsCommand implements ToadzCommand {
                         .title("MAGIC - $" + discordBot.getCurrentPrice())
                         .description(
                             "MC Rank: #"
-                                + coinData.getMarketCapRank()
+                                + marketPrice.getMarketCapRank()
                                 + "\n"
                                 + "Market cap: $"
                                 + NumberFormat.getIntegerInstance()
-                                    .format(coinData.getMarketData().getMarketCap().get("usd"))
+                                    .format(marketPrice.getMarketCap())
                                 + "\n"
                                 + "24 hour volume: $"
                                 + NumberFormat.getIntegerInstance()
@@ -60,15 +60,15 @@ public class MagicStatsCommand implements ToadzCommand {
                                 + "\n"
                                 + "In circulation: "
                                 + NumberFormat.getIntegerInstance()
-                                    .format(coinData.getMarketData().getCirculatingSupply())
+                                    .format(marketPrice.getCirculatingSupply())
                                 + " MAGIC\n"
                                 + "Total supply: "
                                 + NumberFormat.getIntegerInstance()
-                                    .format(coinData.getMarketData().getTotalSupply())
+                                    .format(marketPrice.getTotalSupply())
                                 + " MAGIC\n"
                                 + "Max supply: "
                                 + NumberFormat.getIntegerInstance()
-                                    .format(coinData.getMarketData().getMaxSupply())
+                                    .format(marketPrice.getMaxSupply())
                                 + " MAGIC")
                         .addField(
                             "Current Prices",
@@ -76,12 +76,10 @@ public class MagicStatsCommand implements ToadzCommand {
                                 + discordBot.getCurrentPrice()
                                 + "`\n"
                                 + "ETH: `"
-                                + String.format(
-                                    "`%.6f`", coinData.getMarketData().getCurrentPrice().get("eth"))
+                                + String.format("`%.6f`", marketPrice.getPriceInEth())
                                 + "`\n"
                                 + "BTC: `"
-                                + String.format(
-                                    "`%.8f`", coinData.getMarketData().getCurrentPrice().get("btc"))
+                                + String.format("`%.8f`", marketPrice.getPriceInBtc())
                                 + "`\n",
                             true)
                         .addField(
@@ -94,13 +92,11 @@ public class MagicStatsCommand implements ToadzCommand {
                                 + "`\n"
                                 + "7d: `"
                                 + String.format(
-                                    "`%.2f%%`",
-                                    coinData.getMarketData().getPriceChangePercentage7d())
+                                    "`%.2f%%`", marketPrice.getPriceChangePercentage7d())
                                 + "`\n"
                                 + "1m: `"
                                 + String.format(
-                                    "`%.2f%%`",
-                                    coinData.getMarketData().getPriceChangePercentage30d())
+                                    "`%.2f%%`", marketPrice.getPriceChangePercentage30d())
                                 + "`\n",
                             true)
                         .thumbnail(

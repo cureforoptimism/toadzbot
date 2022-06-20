@@ -21,7 +21,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SalesService {
   private final ToadzSaleRepository toadzSaleRepository;
-  private final CoinGeckoService coinGeckoService;
+  private final MarketPriceMessageSubscriber marketPriceMessageSubscriber;
   private Date lastPostedBlockTimestamp = null;
   private final DiscordBot discordBot;
   private final Utilities utilities;
@@ -74,11 +73,12 @@ public class SalesService {
         toadzSaleRepository.findByBlockTimestampIsAfterAndPostedIsFalseOrderByBlockTimestampAsc(
             lastPostedBlockTimestamp);
     if (!newSales.isEmpty()) {
-      final Optional<Double> ethMktPriceOpt = coinGeckoService.getEthPrice();
-      if (ethMktPriceOpt.isEmpty()) {
+      if (marketPriceMessageSubscriber.getLastMarketPlace().getPriceInEth() == null) {
         // This will retry once we have an ethereum price
         return;
       }
+      final Double ethMktPrice = marketPriceMessageSubscriber.getLastMarketPlace().getEthPrice();
+
       final NumberFormat decimalFormatZeroes = new DecimalFormat("#,###.00");
       final NumberFormat decimalFormatOptionalZeroes = new DecimalFormat("0.##");
       Double currentPrice = discordBot.getCurrentPrice();
@@ -94,7 +94,7 @@ public class SalesService {
       for (ToadzSale toadzSale : newSales) {
         final BigDecimal usdPrice =
             toadzSale.getSalePrice().multiply(BigDecimal.valueOf(currentPrice));
-        final Double ethPrice = usdPrice.doubleValue() / ethMktPriceOpt.get();
+        final Double ethPrice = usdPrice.doubleValue() / ethMktPrice;
         final String ethValue = decimalFormatOptionalZeroes.format(ethPrice);
         final String usdValue = decimalFormatZeroes.format(usdPrice);
 
