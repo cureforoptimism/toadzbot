@@ -47,9 +47,9 @@ public class SalesService {
       return;
     }
 
-    //    if (System.getenv("PROD") == null) {
-    //      return;
-    //    }
+    if (System.getenv("PROD") == null) {
+      return;
+    }
 
     if (lastPostedBlockTimestamp == null) {
       ToadzSale lastPostedSale =
