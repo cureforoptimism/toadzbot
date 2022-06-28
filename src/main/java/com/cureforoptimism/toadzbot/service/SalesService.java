@@ -86,6 +86,7 @@ public class SalesService {
       List<Long> channelList = new ArrayList<>();
       if (System.getenv("PROD") != null) {
         channelList.add(Constants.CHANNEL_SALES_BOT);
+        channelList.add(Constants.CHANNEL_MILLIBOBS_BOT);
       }
 
       // Odd; additional channels don't get the image. Maybe need separate file uploads.
@@ -143,29 +144,31 @@ public class SalesService {
                 .build();
         twitterClient.postTweet(tweetParameters);
 
-        final MessageCreateSpec messageCreateSpec =
-            MessageCreateSpec.builder()
-                .addFile("toadz_" + tokenId + ".png", new ByteArrayInputStream(bytes))
-                .addEmbed(
-                    EmbedCreateSpec.builder()
-                        .description(
-                            "**SOLD**\nToadstoolz #"
-                                + tokenId
-                                + " (Rarity Rank: **#"
-                                + rarityRank
-                                + "**)")
-                        .addField(
-                            "MAGIC",
-                            decimalFormatOptionalZeroes.format(toadzSale.getSalePrice()),
-                            true)
-                        .addField("USD", "$" + usdValue, true)
-                        .addField("ETH", "Ξ" + ethValue, true)
-                        .image("attachment://toadz_" + tokenId + ".png")
-                        .timestamp(toadzSale.getBlockTimestamp().toInstant())
-                        .build())
-                .build();
+        for(Long channel : channelList) {
+          final MessageCreateSpec messageCreateSpec =
+              MessageCreateSpec.builder()
+                  .addFile("toadz_" + tokenId + "_" + channel + ".png", new ByteArrayInputStream(bytes))
+                  .addEmbed(
+                      EmbedCreateSpec.builder()
+                          .description(
+                              "**SOLD**\nToadstoolz #"
+                                  + tokenId
+                                  + " (Rarity Rank: **#"
+                                  + rarityRank
+                                  + "**)")
+                          .addField(
+                              "MAGIC",
+                              decimalFormatOptionalZeroes.format(toadzSale.getSalePrice()),
+                              true)
+                          .addField("USD", "$" + usdValue, true)
+                          .addField("ETH", "Ξ" + ethValue, true)
+                          .image("attachment://toadz_" + tokenId + "_" + channel + ".png")
+                          .timestamp(toadzSale.getBlockTimestamp().toInstant())
+                          .build())
+                  .build();
 
-        discordBot.postMessage(messageCreateSpec, channelList);
+          discordBot.postMessage(messageCreateSpec, List.of(channel));
+        }
 
         toadzSale.setPosted(true);
         toadzSaleRepository.save(toadzSale);
