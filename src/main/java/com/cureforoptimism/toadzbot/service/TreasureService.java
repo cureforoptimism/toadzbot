@@ -70,10 +70,8 @@ public class TreasureService {
         } else if(category.equalsIgnoreCase("resource")) {
           String name = item.getString("name");
 
-          if(!name.equalsIgnoreCase("gold wood")) {
-            resources.put(name, item.getInt("totalSupply"));
-            totalResources += item.getLong("totalSupply");
-          }
+          resources.put(name, item.getInt("totalSupply"));
+          totalResources += item.getLong("totalSupply");
         }
       }
 
