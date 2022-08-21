@@ -209,6 +209,9 @@ public class TreasureService {
 
       for (int x = 0; x < listings.length(); x++) {
         final var listing = listings.getJSONObject(x);
+        if(listing.getString("type").equalsIgnoreCase("bid")) {
+          continue;
+        }
 
         String id = listing.getString("id");
         String transactionId = "https://arbiscan.io/tx/" + id.split("-")[3];
