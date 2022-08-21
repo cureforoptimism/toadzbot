@@ -30,7 +30,7 @@ public class SupplyCommand implements ToadzCommand {
   @Override
   public Mono<Message> handle(MessageCreateEvent event) {
     final var msg = treasureService.getSupplyMessage();
-    if(msg != null) {
+    if (msg != null) {
       event.getMessage().getChannel().flatMap(c -> c.createMessage(msg)).block();
     }
 

@@ -144,10 +144,11 @@ public class SalesService {
                 .build();
         twitterClient.postTweet(tweetParameters);
 
-        for(Long channel : channelList) {
+        for (Long channel : channelList) {
           final MessageCreateSpec messageCreateSpec =
               MessageCreateSpec.builder()
-                  .addFile("toadz_" + tokenId + "_" + channel + ".png", new ByteArrayInputStream(bytes))
+                  .addFile(
+                      "toadz_" + tokenId + "_" + channel + ".png", new ByteArrayInputStream(bytes))
                   .addEmbed(
                       EmbedCreateSpec.builder()
                           .description(
