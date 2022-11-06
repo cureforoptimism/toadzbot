@@ -8,10 +8,6 @@ import com.cureforoptimism.toadzbot.repository.ToadzRarityRankRepository;
 import com.cureforoptimism.toadzbot.repository.ToadzSaleRepository;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageCreateSpec;
-import io.github.redouane59.twitter.TwitterClient;
-import io.github.redouane59.twitter.dto.tweet.MediaCategory;
-import io.github.redouane59.twitter.dto.tweet.TweetParameters;
-import io.github.redouane59.twitter.dto.tweet.TweetParameters.Media;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,7 +33,7 @@ public class SalesService {
   private final DiscordBot discordBot;
   private final Utilities utilities;
 
-  private final TwitterClient twitterClient;
+//  private final TwitterClient twitterClient;
 
   private final ToadzRarityRankRepository toadzRarityRankRepository;
 
@@ -118,31 +114,31 @@ public class SalesService {
 
         byte[] bytes = baos.toByteArray();
         // TODO: Uncomment if we add twitter
-        final var mediaResponse =
-            twitterClient.uploadMedia(
-                toadzSale.getTokenId() + "_toadstoolz.png", bytes, MediaCategory.TWEET_IMAGE);
-        final var media = Media.builder().mediaIds(List.of(mediaResponse.getMediaId())).build();
-        TweetParameters tweetParameters =
-            TweetParameters.builder()
-                .media(media)
-                .text(
-                    "Toadstoolz #"
-                        + tokenId
-                        + " (Rarity Rank #"
-                        + rarityRank
-                        + ")\nSold for\nMAGIC: "
-                        + decimalFormatOptionalZeroes.format(toadzSale.getSalePrice())
-                        + "\nUSD: $"
-                        + usdValue
-                        + "\nETH: "
-                        + ethValue
-                        + "\n\n"
-                        + "https://marketplace.treasure.lol/collection/toadstoolz/"
-                        + toadzSale.getTokenId()
-                        + "\n\n"
-                        + "#toadstoolz #treasuredao")
-                .build();
-        twitterClient.postTweet(tweetParameters);
+//        final var mediaResponse =
+//            twitterClient.uploadMedia(
+//                toadzSale.getTokenId() + "_toadstoolz.png", bytes, MediaCategory.TWEET_IMAGE);
+//        final var media = Media.builder().mediaIds(List.of(mediaResponse.getMediaId())).build();
+//        TweetParameters tweetParameters =
+//            TweetParameters.builder()
+//                .media(media)
+//                .text(
+//                    "Toadstoolz #"
+//                        + tokenId
+//                        + " (Rarity Rank #"
+//                        + rarityRank
+//                        + ")\nSold for\nMAGIC: "
+//                        + decimalFormatOptionalZeroes.format(toadzSale.getSalePrice())
+//                        + "\nUSD: $"
+//                        + usdValue
+//                        + "\nETH: "
+//                        + ethValue
+//                        + "\n\n"
+//                        + "https://marketplace.treasure.lol/collection/toadstoolz/"
+//                        + toadzSale.getTokenId()
+//                        + "\n\n"
+//                        + "#toadstoolz #treasuredao")
+//                .build();
+//        twitterClient.postTweet(tweetParameters);
 
         for (Long channel : channelList) {
           final MessageCreateSpec messageCreateSpec =
